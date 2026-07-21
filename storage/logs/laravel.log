@@ -1,0 +1,94 @@
+[2026-07-21 14:54:35] local.ERROR: SQLSTATE[HY000] [2002] Unknown error while connecting (Connection: mysql, Host: 172.17.0.1, Port: 3306, Database: storage_app, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`) {"exception":"[object] (Illuminate\\Database\\QueryException(code: 2002): SQLSTATE[HY000] [2002] Unknown error while connecting (Connection: mysql, Host: 172.17.0.1, Port: 3306, Database: storage_app, SQL: select exists (select 1 from information_schema.tables where table_schema = schema() and table_name = 'migrations' and table_type in ('BASE TABLE', 'SYSTEM VERSIONED')) as `exists`) at /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php:857)
+[stacktrace]
+#0 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(813): Illuminate\\Database\\Connection->runQueryCallback()
+#1 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(426): Illuminate\\Database\\Connection->run()
+#2 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(371): Illuminate\\Database\\Connection->select()
+#3 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(388): Illuminate\\Database\\Connection->selectOne()
+#4 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(176): Illuminate\\Database\\Connection->scalar()
+#5 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/DatabaseMigrationRepository.php(185): Illuminate\\Database\\Schema\\Builder->hasTable()
+#6 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(797): Illuminate\\Database\\Migrations\\DatabaseMigrationRepository->repositoryExists()
+#7 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/StatusCommand.php(55): Illuminate\\Database\\Migrations\\Migrator->repositoryExists()
+#8 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(672): Illuminate\\Database\\Console\\Migrations\\StatusCommand->{closure:Illuminate\\Database\\Console\\Migrations\\StatusCommand::handle():54}()
+#9 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/StatusCommand.php(54): Illuminate\\Database\\Migrations\\Migrator->usingConnection()
+#10 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate\\Database\\Console\\Migrations\\StatusCommand->handle()
+#11 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::{closure:Illuminate\\Container\\BoundMethod::call():35}()
+#12 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(96): Illuminate\\Container\\Util::unwrapIfClosure()
+#13 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#14 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/Container.php(799): Illuminate\\Container\\BoundMethod::call()
+#15 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Console/Command.php(280): Illuminate\\Container\\Container->call()
+#16 /home/atlas/Projects/storage-app/vendor/symfony/console/Command/Command.php(284): Illuminate\\Console\\Command->execute()
+#17 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony\\Component\\Console\\Command\\Command->run()
+#18 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(1144): Illuminate\\Console\\Command->run()
+#19 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(379): Symfony\\Component\\Console\\Application->doRunCommand()
+#20 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(218): Symfony\\Component\\Console\\Application->doRun()
+#21 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#22 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#23 /home/atlas/Projects/storage-app/artisan(16): Illuminate\\Foundation\\Application->handleCommand()
+#24 {main}
+
+[previous exception] [object] (PDOException(code: 2002): SQLSTATE[HY000] [2002] Unknown error while connecting at /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connectors/Connector.php:67)
+[stacktrace]
+#0 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connectors/Connector.php(67): PDO::connect()
+#1 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connectors/Connector.php(44): Illuminate\\Database\\Connectors\\Connector->createPdoConnection()
+#2 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connectors/MySqlConnector.php(24): Illuminate\\Database\\Connectors\\Connector->createConnection()
+#3 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connectors/ConnectionFactory.php(220): Illuminate\\Database\\Connectors\\MySqlConnector->connect()
+#4 [internal function]: Illuminate\\Database\\Connectors\\ConnectionFactory->{closure:Illuminate\\Database\\Connectors\\ConnectionFactory::createPdoResolverWithHosts():213}()
+#5 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(1297): call_user_func()
+#6 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(1335): Illuminate\\Database\\Connection->getPdo()
+#7 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(542): Illuminate\\Database\\Connection->getReadPdo()
+#8 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(435): Illuminate\\Database\\Connection->getPdoForSelect()
+#9 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(846): Illuminate\\Database\\Connection->{closure:Illuminate\\Database\\Connection::select():426}()
+#10 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(813): Illuminate\\Database\\Connection->runQueryCallback()
+#11 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(426): Illuminate\\Database\\Connection->run()
+#12 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(371): Illuminate\\Database\\Connection->select()
+#13 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Connection.php(388): Illuminate\\Database\\Connection->selectOne()
+#14 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Schema/Builder.php(176): Illuminate\\Database\\Connection->scalar()
+#15 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/DatabaseMigrationRepository.php(185): Illuminate\\Database\\Schema\\Builder->hasTable()
+#16 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(797): Illuminate\\Database\\Migrations\\DatabaseMigrationRepository->repositoryExists()
+#17 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/StatusCommand.php(55): Illuminate\\Database\\Migrations\\Migrator->repositoryExists()
+#18 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Migrations/Migrator.php(672): Illuminate\\Database\\Console\\Migrations\\StatusCommand->{closure:Illuminate\\Database\\Console\\Migrations\\StatusCommand::handle():54}()
+#19 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Database/Console/Migrations/StatusCommand.php(54): Illuminate\\Database\\Migrations\\Migrator->usingConnection()
+#20 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(36): Illuminate\\Database\\Console\\Migrations\\StatusCommand->handle()
+#21 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/Util.php(43): Illuminate\\Container\\BoundMethod::{closure:Illuminate\\Container\\BoundMethod::call():35}()
+#22 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(96): Illuminate\\Container\\Util::unwrapIfClosure()
+#23 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/BoundMethod.php(35): Illuminate\\Container\\BoundMethod::callBoundMethod()
+#24 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Container/Container.php(799): Illuminate\\Container\\BoundMethod::call()
+#25 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Console/Command.php(280): Illuminate\\Container\\Container->call()
+#26 /home/atlas/Projects/storage-app/vendor/symfony/console/Command/Command.php(284): Illuminate\\Console\\Command->execute()
+#27 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony\\Component\\Console\\Command\\Command->run()
+#28 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(1144): Illuminate\\Console\\Command->run()
+#29 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(379): Symfony\\Component\\Console\\Application->doRunCommand()
+#30 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(218): Symfony\\Component\\Console\\Application->doRun()
+#31 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#32 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#33 /home/atlas/Projects/storage-app/artisan(16): Illuminate\\Foundation\\Application->handleCommand()
+#34 {main}
+"} 
+[2026-07-21 14:56:37] local.ERROR: The "--json" option does not exist. {"exception":"[object] (Symfony\\Component\\Console\\Exception\\RuntimeException(code: 0): The \"--json\" option does not exist. at /home/atlas/Projects/storage-app/vendor/symfony/console/Input/ArgvInput.php:226)
+[stacktrace]
+#0 /home/atlas/Projects/storage-app/vendor/symfony/console/Input/ArgvInput.php(155): Symfony\\Component\\Console\\Input\\ArgvInput->addLongOption()
+#1 /home/atlas/Projects/storage-app/vendor/symfony/console/Input/ArgvInput.php(88): Symfony\\Component\\Console\\Input\\ArgvInput->parseLongOption()
+#2 /home/atlas/Projects/storage-app/vendor/symfony/console/Input/ArgvInput.php(77): Symfony\\Component\\Console\\Input\\ArgvInput->parseToken()
+#3 /home/atlas/Projects/storage-app/vendor/symfony/console/Input/Input.php(53): Symfony\\Component\\Console\\Input\\ArgvInput->parse()
+#4 /home/atlas/Projects/storage-app/vendor/symfony/console/Command/Command.php(238): Symfony\\Component\\Console\\Input\\Input->bind()
+#5 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Console/Command.php(249): Symfony\\Component\\Console\\Command\\Command->run()
+#6 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(1144): Illuminate\\Console\\Command->run()
+#7 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(379): Symfony\\Component\\Console\\Application->doRunCommand()
+#8 /home/atlas/Projects/storage-app/vendor/symfony/console/Application.php(218): Symfony\\Component\\Console\\Application->doRun()
+#9 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony\\Component\\Console\\Application->run()
+#10 /home/atlas/Projects/storage-app/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(1235): Illuminate\\Foundation\\Console\\Kernel->handle()
+#11 /home/atlas/Projects/storage-app/artisan(16): Illuminate\\Foundation\\Application->handleCommand()
+#12 {main}
+"} 
+[2026-07-21 15:13:05] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:05] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:05] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:06] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:09] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:11] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
+[2026-07-21 15:13:14] local.INFO: File action lookup {"file_id":"michael-mutisos-team","found":false,"disk":null,"path":null} 
