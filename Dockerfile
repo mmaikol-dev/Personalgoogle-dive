@@ -1,4 +1,4 @@
-FROM php:8.4-cli-alpine AS base
+FROM php:8.4-fpm-alpine AS base
 RUN apk add --no-cache \
     postgresql-dev \
     libzip-dev \
@@ -19,8 +19,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN npm ci && npm run build && rm -rf node_modules
 
-RUN php artisan route:cache \
-    && php artisan view:cache \
+RUN php artisan route:cache && php artisan view:cache
 
 RUN ln -s /app/storage/app/drive /app/public/drive
 
