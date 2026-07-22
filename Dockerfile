@@ -21,7 +21,6 @@ RUN npm ci && npm run build && rm -rf node_modules
 
 RUN php artisan route:cache \
     && php artisan view:cache \
-    && php artisan config:cache
 
 RUN ln -s /app/storage/app/drive /app/public/drive
 
