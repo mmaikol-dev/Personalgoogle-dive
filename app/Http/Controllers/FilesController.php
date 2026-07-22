@@ -109,7 +109,7 @@ class FilesController extends Controller
             'expires_at' => ['nullable', 'integer', 'in:0,24,168,720'],
             'password' => ['nullable', 'string', 'min:4', 'max:255'],
             'max_downloads' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'slug' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-]+$/i', 'unique:files,slug,'.$fileId],
+            'slug' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-]+$/i'],
             'folder' => ['nullable', 'string', 'max:255'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],

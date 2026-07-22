@@ -121,7 +121,7 @@ class File extends Model
         return Attribute::get(function () {
             $token = $this->slug ?? $this->uuid;
 
-            return url("/f/{$token}");
+            return url("/f/{$token}/{$this->original_name}");
         });
     }
 
