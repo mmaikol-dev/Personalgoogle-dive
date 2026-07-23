@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\File;
+use App\Services\GoogleSheetsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class FileUploadController extends Controller
@@ -26,10 +28,12 @@ class FileUploadController extends Controller
             'expires_in_hours' => ['nullable', 'integer', 'in:0,24,168,720'],
             'password' => ['nullable', 'string', 'min:4', 'max:255'],
             'max_downloads' => ['nullable', 'integer', 'min:1', 'max:100000'],
-            'slug' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-]+$/i', 'unique:files,slug'],
+            'slug' => ['nullable', 'string', 'max:100', 'regex:/^[a-z0-9\-]+$/i'],
             'folder' => ['nullable', 'string', 'max:255'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
+            'caption' => ['nullable', 'string', 'max:1000'],
+            'google_sheet_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         $uploaded = $request->file('file');
@@ -73,8 +77,25 @@ class FileUploadController extends Controller
 
         $file = File::create($data);
 
+        $googleSheetsSynced = false;
+
+        try {
+            $googleSheetsSynced = app(GoogleSheetsService::class)->appendUpload(
+                $file->team,
+                $file,
+                $request->string('caption')->toString(),
+                $request->string('google_sheet_name')->toString() ?: null,
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Unable to append API upload to Google Sheets.', [
+                'file_id' => $file->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
+            'google_sheets_synced' => $googleSheetsSynced,
             'file' => $file->toArray(),
         ], 201);
     }

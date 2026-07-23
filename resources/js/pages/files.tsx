@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Select,
     SelectContent,
@@ -63,7 +64,10 @@ type FilesSettings = {
 };
 
 export default function Files() {
-    const { files, folders, allTags, filters, currentTeam } = usePage<FilesPage & { currentTeam?: { slug: string } | null }>().props;
+    const { files, folders, allTags, filters, currentTeam, googleSheets } = usePage<FilesPage & {
+        currentTeam?: { slug: string } | null;
+        googleSheets?: { sheetNames: string[]; defaultSheet: string | null };
+    }>().props;
 
     const [search, setSearch] = useState(filters.search || '');
     const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -82,6 +86,8 @@ export default function Files() {
         tags: '',
     });
     const [uploadFileList, setUploadFileList] = useState<globalThis.File[]>([]);
+    const [uploadCaption, setUploadCaption] = useState('');
+    const [uploadSheetName, setUploadSheetName] = useState(googleSheets?.defaultSheet ?? '');
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -157,16 +163,24 @@ export default function Files() {
     const handleUpload = async () => {
         if (uploadFileList.length === 0) return;
         setUploading(true);
+        let googleSheetsError = false;
 
         for (const file of uploadFileList) {
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('caption', uploadCaption);
+            if (uploadSheetName) formData.append('google_sheet_name', uploadSheetName);
             if (activeFolder) formData.append('folder', activeFolder);
 
             await new Promise<void>((resolve) => {
                 router.post(filesRoute.store(teamSlug!), formData, {
                     preserveState: true,
                     preserveScroll: true,
+                    onError: (errors) => {
+                        if (errors.google_sheets) {
+                            googleSheetsError = true;
+                        }
+                    },
                     onFinish: () => resolve(),
                 });
             });
@@ -175,7 +189,13 @@ export default function Files() {
         setUploading(false);
         setUploadOpen(false);
         setUploadFileList([]);
-        toast.success(`${uploadFileList.length} file(s) uploaded`);
+        setUploadCaption('');
+
+        if (googleSheetsError) {
+            toast.error('Files uploaded, but one or more rows could not be added to Google Sheets.');
+        } else {
+            toast.success(`${uploadFileList.length} file(s) uploaded`);
+        }
     };
 
     const openSettings = (file: DriveFile) => {
@@ -327,6 +347,7 @@ export default function Files() {
                             <FileUp className="size-12" />
                             <p className="text-lg font-medium">Drop files to upload</p>
                         </div>
+
                     </div>
                 )}
 
@@ -635,6 +656,36 @@ export default function Files() {
                                 onChange={handleFileSelect}
                             />
                         </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="upload-caption">Caption</Label>
+                            <Textarea
+                                id="upload-caption"
+                                value={uploadCaption}
+                                onChange={(event) => setUploadCaption(event.target.value)}
+                                placeholder="A caption to save with this upload"
+                                maxLength={1000}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Added to the Google Sheet for every file in this upload.
+                            </p>
+                        </div>
+
+                        {googleSheets && googleSheets.sheetNames.length > 0 && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="upload-sheet">Post link to sheet</Label>
+                                <Select value={uploadSheetName} onValueChange={setUploadSheetName}>
+                                    <SelectTrigger id="upload-sheet">
+                                        <SelectValue placeholder="Choose a sheet" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {googleSheets.sheetNames.map((name) => (
+                                            <SelectItem key={name} value={name}>{name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                     </div>
 
                     <DrawerFooter>

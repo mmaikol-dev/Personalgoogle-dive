@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Services\GoogleSheetsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -52,6 +54,16 @@ class FilesController extends Controller
             ->unique()
             ->values();
 
+        $googleSheetNames = [];
+
+        if ($team->google_sheet_id) {
+            try {
+                $googleSheetNames = app(GoogleSheetsService::class)->sheetNames($team);
+            } catch (\Throwable) {
+                // An upload can continue even when Google is temporarily unavailable.
+            }
+        }
+
         return Inertia::render('files', [
             'files' => $files,
             'folders' => $folders,
@@ -62,6 +74,10 @@ class FilesController extends Controller
                 ->groupBy('date')
                 ->orderBy('date')
                 ->get(),
+            'googleSheets' => [
+                'sheetNames' => $googleSheetNames,
+                'defaultSheet' => $team->google_sheet_name,
+            ],
         ]);
     }
 
@@ -70,6 +86,8 @@ class FilesController extends Controller
         $request->validate([
             'file' => ['required', 'file', 'max:102400'],
             'folder' => ['nullable', 'string', 'max:255'],
+            'caption' => ['nullable', 'string', 'max:1000'],
+            'google_sheet_name' => ['nullable', 'string', 'max:100'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
         ]);
@@ -78,13 +96,9 @@ class FilesController extends Controller
         $uploaded = $request->file('file');
         $uuid = (string) Str::uuid();
         $originalName = $uploaded->getClientOriginalName();
-        $path = $uploaded->storeAs($uuid, $originalName, 'drive');
+        $path = $uploaded->storeAs("drive/{$uuid}", $originalName, 'local');
 
-        if ($path === false) {
-            return back()->withErrors(['file' => 'The file could not be saved. Please try again.']);
-        }
-
-        File::create([
+        $file = File::create([
             'team_id' => $team->id,
             'user_id' => $request->user()->id,
             'uuid' => $uuid,
@@ -92,18 +106,35 @@ class FilesController extends Controller
             'original_name' => $originalName,
             'mime_type' => $uploaded->getMimeType(),
             'size' => $uploaded->getSize(),
-            'disk' => 'drive',
+            'disk' => 'local',
             'path' => $path,
             'folder' => $request->get('folder'),
             'tags' => $request->get('tags'),
         ]);
+
+        try {
+            app(GoogleSheetsService::class)->appendUpload(
+                $team,
+                $file,
+                $request->string('caption')->toString(),
+                $request->string('google_sheet_name')->toString() ?: null,
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Unable to append upload to Google Sheets.', [
+                'file_id' => $file->id,
+                'team_id' => $team->id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return back()->withErrors(['google_sheets' => 'The file was uploaded, but it could not be added to Google Sheets.']);
+        }
 
         return redirect()->back();
     }
 
     public function update(Request $request, string $current_team, string $fileId): RedirectResponse
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
 
         $validated = $request->validate([
             'expires_at' => ['nullable', 'integer', 'in:0,24,168,720'],
@@ -150,7 +181,7 @@ class FilesController extends Controller
 
     public function revoke(string $current_team, string $fileId): RedirectResponse
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
         $file->update(['revoked_at' => now()]);
 
         return redirect()->back();
@@ -158,7 +189,7 @@ class FilesController extends Controller
 
     public function unrevoke(string $current_team, string $fileId): RedirectResponse
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
         $file->update(['revoked_at' => null]);
 
         return redirect()->back();
@@ -166,7 +197,7 @@ class FilesController extends Controller
 
     public function destroy(Request $request, string $current_team, string $fileId): RedirectResponse
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
 
         Storage::disk($file->disk)->deleteDirectory(dirname($file->path));
         $file->delete();
@@ -193,7 +224,7 @@ class FilesController extends Controller
 
     public function download(string $current_team, string $fileId)
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
 
         if (! Storage::disk($file->disk)->exists($file->path)) {
             abort(404, 'File not found on disk');
@@ -206,24 +237,28 @@ class FilesController extends Controller
 
     public function preview(string $current_team, string $fileId)
     {
-        $file = $this->findFileOrFail($fileId);
+        $file = File::findOrFail($fileId);
 
         if (! str($file->mime_type)->startsWith(['image/', 'application/pdf'])) {
-            return response()->json(['error' => 'mime_check_failed', 'mime' => $file->mime_type], 404);
+            abort(404, 'Preview not available');
         }
 
         $disk = Storage::disk($file->disk);
+        $fullPath = $disk->path($file->path);
         $exists = $disk->exists($file->path);
 
+        Log::debug('preview check', [
+            'id' => $file->id,
+            'mime' => $file->mime_type,
+            'disk' => $file->disk,
+            'path' => $file->path,
+            'full_path' => $fullPath,
+            'exists' => $exists,
+            'disk_root' => $disk->getConfig()['root'] ?? 'unknown',
+        ]);
+
         if (! $exists) {
-            return response()->json([
-                'error' => 'file_not_on_disk',
-                'path' => $file->path,
-                'full_path' => $disk->path($file->path),
-                'disk_root' => $disk->getConfig()['root'] ?? 'unknown',
-                'file_exists' => file_exists($disk->path($file->path)),
-                'dir_readable' => is_readable(dirname($disk->path($file->path))),
-            ], 404);
+            abort(404, 'File not found on disk');
         }
 
         return Storage::disk($file->disk)->response($file->path, null, [
@@ -231,14 +266,5 @@ class FilesController extends Controller
             'Content-Disposition' => 'inline; filename="'.$file->original_name.'"',
             'Cache-Control' => 'public, max-age=31536000',
         ]);
-    }
-
-    private function findFileOrFail(string $fileId): File
-    {
-        $file = File::find($fileId);
-
-        abort_unless($file, 404);
-
-        return $file;
     }
 }

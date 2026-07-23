@@ -109,8 +109,7 @@ class File extends Model
 
     public function isAccessible(): Attribute
     {
-        return Attribute::get(fn () =>
-            ! $this->is_expired
+        return Attribute::get(fn () => ! $this->is_expired
             && ! $this->is_revoked
             && ! $this->is_download_limit_reached
         );
@@ -119,6 +118,8 @@ class File extends Model
     public function shareUrl(): Attribute
     {
         return Attribute::get(function () {
+            // A team may contain many files.  Its slug therefore cannot identify a
+            // single file; use the file's custom slug (or UUID) as the share token.
             $token = $this->slug ?? $this->uuid;
 
             return url("/f/{$token}/{$this->original_name}");

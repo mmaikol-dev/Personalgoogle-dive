@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Services\GoogleSheetsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -16,6 +18,8 @@ class ChunkUploadController extends Controller
             'original_name' => ['required', 'string', 'max:255'],
             'total_size' => ['required', 'integer', 'min:1', 'max:1073741824'],
             'total_chunks' => ['required', 'integer', 'min:1', 'max:10000'],
+            'caption' => ['nullable', 'string', 'max:1000'],
+            'google_sheet_name' => ['nullable', 'string', 'max:100'],
         ]);
 
         $uploadId = (string) Str::uuid();
@@ -27,6 +31,8 @@ class ChunkUploadController extends Controller
             'total_size' => (int) $request->get('total_size'),
             'total_chunks' => (int) $request->get('total_chunks'),
             'received' => [],
+            'caption' => $request->string('caption')->toString(),
+            'google_sheet_name' => $request->string('google_sheet_name')->toString(),
             'created_at' => now(),
         ], now()->addHours(2));
 
@@ -146,8 +152,25 @@ class ChunkUploadController extends Controller
             'tags' => $request->get('tags'),
         ]);
 
+        $googleSheetsSynced = false;
+
+        try {
+            $googleSheetsSynced = app(GoogleSheetsService::class)->appendUpload(
+                $request->user()->currentTeam,
+                $file,
+                $upload['caption'] ?? null,
+                $upload['google_sheet_name'] ?? null,
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Unable to append chunk upload to Google Sheets.', [
+                'file_id' => $file->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
+
         return response()->json([
             'file' => $file->toArray(),
+            'google_sheets_synced' => $googleSheetsSynced,
         ]);
     }
 }

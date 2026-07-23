@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -11,9 +12,33 @@ class PublicShareController extends Controller
 {
     public function show(Request $request, string $token, ?string $filename = null)
     {
-        $file = File::where(function ($query) use ($token) {
+        $query = File::where(function ($query) use ($token) {
             $query->where('uuid', $token)->orWhere('slug', $token);
-        })->firstOrFail();
+        });
+
+        // Slugs can be reused, so the filename in the public URL is part of the
+        // identifier. Without this filter Eloquent returns the first matching slug.
+        if ($filename !== null) {
+            $query->where('original_name', $filename);
+        }
+
+        $file = $query->first();
+
+        if (! $file && $filename) {
+            $team = Team::where('slug', $token)->first();
+
+            if ($team) {
+                $file = File::where('team_id', $team->id)
+                    ->where('original_name', $filename)
+                    ->where('is_public', true)
+                    ->orderByDesc('updated_at')
+                    ->first();
+            }
+        }
+
+        if (! $file) {
+            abort(404);
+        }
 
         if (! $file->is_accessible) {
             if ($file->is_expired) {

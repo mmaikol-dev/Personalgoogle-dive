@@ -19,6 +19,8 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string $slug
  * @property bool $is_personal
+ * @property string|null $google_sheet_id
+ * @property string|null $google_sheet_name
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -26,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
  */
-#[Fillable(['name', 'slug', 'is_personal'])]
+#[Fillable(['name', 'slug', 'is_personal', 'google_sheet_id', 'google_sheet_name'])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
