@@ -125,8 +125,6 @@ class FilesController extends Controller
                 'team_id' => $team->id,
                 'exception' => $exception->getMessage(),
             ]);
-
-            return back()->withErrors(['google_sheets' => 'The file was uploaded, but it could not be added to Google Sheets.']);
         }
 
         return redirect()->back();
