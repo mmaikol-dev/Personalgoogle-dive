@@ -8,6 +8,7 @@ export type DriveFile = {
     size_for_humans: string;
     folder: string | null;
     tags: string[] | null;
+    post_type: string | null;
     share_url: string;
     expires_at: string | null;
     max_downloads: number | null;

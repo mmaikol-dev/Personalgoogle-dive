@@ -25,7 +25,7 @@ class GoogleSheetsService
             throw new RuntimeException('The selected sheet is not available in this spreadsheet.');
         }
 
-        $range = rawurlencode($sheetName).'!A:C';
+        $range = rawurlencode($sheetName).'!A:D';
 
         Http::withToken($accessToken)
             ->acceptJson()
@@ -36,12 +36,13 @@ class GoogleSheetsService
                     'insertDataOption' => 'INSERT_ROWS',
                 ]),
                 [
-                    'range' => "{$sheetName}!A:C",
+                    'range' => "{$sheetName}!A:D",
                     'majorDimension' => 'ROWS',
                     'values' => [[
                         $file->share_url,
                         $caption ?? '',
                         '',
+                        $file->post_type ?? '',
                     ]],
                 ],
             )

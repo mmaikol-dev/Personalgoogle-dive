@@ -24,6 +24,7 @@ use Illuminate\Support\Str;
  * @property string $path
  * @property string|null $folder
  * @property array|null $tags
+ * @property string|null $post_type
  * @property bool $is_public
  * @property Carbon|null $expires_at
  * @property string|null $password_hash
@@ -45,7 +46,7 @@ use Illuminate\Support\Str;
  */
 #[Fillable([
     'uuid', 'team_id', 'user_id', 'name', 'original_name', 'mime_type', 'size',
-    'disk', 'path', 'folder', 'tags', 'is_public',
+    'disk', 'path', 'folder', 'tags', 'post_type', 'is_public',
     'expires_at', 'password_hash', 'max_downloads', 'slug',
 ])]
 class File extends Model
@@ -63,6 +64,7 @@ class File extends Model
             'max_downloads' => 'integer',
             'download_count' => 'integer',
             'tags' => 'array',
+            'post_type' => 'string',
         ];
     }
 
@@ -150,6 +152,7 @@ class File extends Model
             'size_for_humans' => $this->getSizeForHumans(),
             'folder' => $this->folder,
             'tags' => $this->tags,
+            'post_type' => $this->post_type,
             'is_public' => true,
             'share_url' => $this->share_url,
             'expires_at' => $this->expires_at?->toIso8601String(),

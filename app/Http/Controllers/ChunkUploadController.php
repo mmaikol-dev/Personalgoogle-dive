@@ -20,6 +20,7 @@ class ChunkUploadController extends Controller
             'total_chunks' => ['required', 'integer', 'min:1', 'max:10000'],
             'caption' => ['nullable', 'string', 'max:1000'],
             'google_sheet_name' => ['nullable', 'string', 'max:100'],
+            'post_type' => ['nullable', 'string', 'max:50'],
         ]);
 
         $uploadId = (string) Str::uuid();
@@ -33,6 +34,7 @@ class ChunkUploadController extends Controller
             'received' => [],
             'caption' => $request->string('caption')->toString(),
             'google_sheet_name' => $request->string('google_sheet_name')->toString(),
+            'post_type' => $request->string('post_type')->toString(),
             'created_at' => now(),
         ], now()->addHours(2));
 
@@ -150,6 +152,7 @@ class ChunkUploadController extends Controller
             'path' => $finalPath,
             'folder' => $request->get('folder'),
             'tags' => $request->get('tags'),
+            'post_type' => $upload['post_type'] ?: null,
         ]);
 
         $googleSheetsSynced = false;

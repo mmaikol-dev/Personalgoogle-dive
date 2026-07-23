@@ -34,6 +34,14 @@ import {
     DrawerTitle,
 } from '@/components/ui/drawer';
 import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet';
+import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -61,7 +69,16 @@ type FilesSettings = {
     slug: string;
     folder: string;
     tags: string;
+    post_type: string;
 };
+
+const POST_TYPE_OPTIONS = [
+    { value: 'REELS_VIDEO', label: 'Reel' },
+    { value: 'POST_IMAGE', label: 'Post Image' },
+    { value: 'POST_VIDEO', label: 'Post Video' },
+    { value: 'STORY_IMAGE', label: 'Story Image' },
+    { value: 'STORY_VIDEO', label: 'Story Video' },
+] as const;
 
 export default function Files() {
     const { files, folders, allTags, filters, currentTeam, googleSheets } = usePage<FilesPage & {
@@ -84,13 +101,16 @@ export default function Files() {
         slug: '',
         folder: '',
         tags: '',
+        post_type: '',
     });
     const [uploadFileList, setUploadFileList] = useState<globalThis.File[]>([]);
     const [uploadCaption, setUploadCaption] = useState('');
     const [uploadSheetName, setUploadSheetName] = useState(googleSheets?.defaultSheet ?? '');
+    const [uploadPostType, setUploadPostType] = useState('');
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
+    const [mobileFolderOpen, setMobileFolderOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropRef = useRef<HTMLDivElement>(null);
     const searchTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -171,6 +191,7 @@ export default function Files() {
             formData.append('caption', uploadCaption);
             if (uploadSheetName) formData.append('google_sheet_name', uploadSheetName);
             if (activeFolder) formData.append('folder', activeFolder);
+            if (uploadPostType) formData.append('post_type', uploadPostType);
 
             await new Promise<void>((resolve) => {
                 router.post(filesRoute.store(teamSlug!), formData, {
@@ -190,6 +211,7 @@ export default function Files() {
         setUploadOpen(false);
         setUploadFileList([]);
         setUploadCaption('');
+        setUploadPostType('');
 
         if (googleSheetsError) {
             toast.error('Files uploaded, but one or more rows could not be added to Google Sheets.');
@@ -207,6 +229,7 @@ export default function Files() {
             slug: file.slug || '',
             folder: file.folder || '',
             tags: file.tags?.join(', ') || '',
+            post_type: file.post_type || '',
         });
         setSettingsOpen(true);
     };
@@ -221,6 +244,7 @@ export default function Files() {
         payload.slug = settings.slug;
         payload.folder = settings.folder;
         payload.tags = settings.tags ? settings.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [];
+        payload.post_type = settings.post_type || null;
 
         router.patch(filesRoute.update({ current_team: teamSlug!, fileId: settingsFile.id }), payload as Record<string, string | number | boolean | null | string[]>, {
             preserveState: true,
@@ -295,13 +319,18 @@ export default function Files() {
     const createFolder = () => {
         const name = newFolderName.trim();
         if (!name) return;
-        if (folders.includes(name)) {
-            toast.error('Folder already exists');
-            return;
-        }
-        toast.success(`Folder "${name}" created`);
-        setNewFolderName('');
-        updateQuery({ folder: name, search: search || undefined });
+        router.post(`/${teamSlug}/files/folder`, { name } as Record<string, string>, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(`Folder "${name}" created`);
+                setNewFolderName('');
+                updateQuery({ folder: name, search: search || undefined });
+            },
+            onError: () => {
+                toast.error('Failed to create folder');
+            },
+        });
     };
 
     const getStatusBadge = (file: DriveFile) => {
@@ -363,6 +392,9 @@ export default function Files() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        <Button variant="outline" className="md:hidden" size="icon" onClick={() => setMobileFolderOpen(true)}>
+                            <FolderIcon className="size-4" />
+                        </Button>
                         <Button variant="outline" onClick={() => setUploadOpen(true)}>
                             <HardDrive className="mr-2 size-4" />
                             Upload
@@ -372,72 +404,16 @@ export default function Files() {
 
                 <div className="flex gap-4">
                     <div className="sticky top-4 hidden max-h-[calc(100vh-2rem)] w-56 shrink-0 self-start overflow-y-auto md:flex md:flex-col md:gap-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Folders</span>
-                            <span className="text-xs text-muted-foreground">{folders.length}</span>
-                        </div>
-
-                        <div className="flex gap-1">
-                            <Input
-                                placeholder="New folder..."
-                                value={newFolderName}
-                                onChange={(e) => setNewFolderName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') createFolder(); }}
-                                className="h-8 text-xs"
-                            />
-                            <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={createFolder}>
-                                <FolderPlus className="size-4" />
-                            </Button>
-                        </div>
-
-                        <div className="flex flex-col gap-0.5">
-                            <button
-                                onClick={() => updateQuery({ folder: undefined, search: search || undefined })}
-                                className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted ${!activeFolder ? 'bg-muted font-medium' : ''}`}
-                            >
-                                <HardDrive className="size-4 text-muted-foreground" />
-                                All Files
-                            </button>
-
-                            {folders.map((f) => (
-                                <button
-                                    key={f}
-                                    onClick={() => updateQuery({ folder: f === activeFolder ? undefined : f, search: search || undefined })}
-                                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted ${activeFolder === f ? 'bg-muted font-medium' : ''}`}
-                                >
-                                    <FolderIcon className="size-4 text-muted-foreground" />
-                                    <span className="truncate">{f}</span>
-                                </button>
-                            ))}
-                        </div>
-
-                        {activeFolder && (
-                            <button
-                                onClick={() => updateQuery({ folder: undefined, search: search || undefined })}
-                                className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left px-2"
-                            >
-                                &larr; Clear filter
-                            </button>
-                        )}
-
-                        <Separator />
-
-                        {allTags.length > 0 && (
-                            <div>
-                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags</span>
-                                <div className="mt-1 flex flex-wrap gap-1">
-                                    {allTags.map((t) => (
-                                        <button
-                                            key={t}
-                                            onClick={() => updateQuery({ tag: filters.tag === t ? undefined : t, search: search || undefined })}
-                                            className={`rounded-md px-2 py-0.5 text-xs transition-colors ${filters.tag === t ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        <FolderSidebarContent
+                            folders={folders}
+                            allTags={allTags}
+                            activeFolder={activeFolder}
+                            filters={filters}
+                            newFolderName={newFolderName}
+                            setNewFolderName={setNewFolderName}
+                            createFolder={createFolder}
+                            updateQuery={updateQuery}
+                        />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -473,11 +449,11 @@ export default function Files() {
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 auto-rows-fr">
                                 {files.data.map((file) => (
                                     <Card
                                         key={file.id}
-                                        className={`group relative overflow-hidden transition-all hover:shadow-md ${selected.has(file.id) ? 'ring-2 ring-primary' : ''}`}
+                                        className={`group relative flex flex-col overflow-hidden transition-all hover:shadow-md ${selected.has(file.id) ? 'ring-2 ring-primary' : ''}`}
                                     >
                                         <div className="absolute top-2 left-2 z-10">
                                             <Checkbox
@@ -488,7 +464,7 @@ export default function Files() {
                                         </div>
 
                                         <div
-                                            className="aspect-video flex items-center justify-center bg-muted/30 cursor-pointer"
+                                            className="flex h-36 items-center justify-center bg-muted/30 cursor-pointer shrink-0"
                                             onClick={() => canPreview(file.mime_type) ? openPreview(file) : downloadFile(file)}
                                         >
                                             {file.mime_type.startsWith('image/') ? (
@@ -505,7 +481,7 @@ export default function Files() {
                                             )}
                                         </div>
 
-                                        <CardContent className="p-3 space-y-2">
+                                        <CardContent className="flex flex-1 flex-col gap-2 p-3">
                                             <div className="min-w-0">
                                                 <p className="truncate text-sm font-medium">{file.original_name}</p>
                                                 <p className="text-xs text-muted-foreground">
@@ -522,55 +498,57 @@ export default function Files() {
                                                 {getStatusBadge(file)}
                                             </div>
 
-                                            <Separator />
+                                            <div className="mt-auto">
+                                                <Separator className="mb-2" />
 
-                                            <div className="flex items-center gap-1">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-7 px-2 text-xs"
-                                                    onClick={() => copyLink(file.share_url)}
-                                                >
-                                                    <Link2 className="mr-1 size-3" /> Copy Link
-                                                </Button>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-7 px-2 text-xs"
+                                                        onClick={() => copyLink(file.share_url)}
+                                                    >
+                                                        <Link2 className="mr-1 size-3" /> Copy Link
+                                                    </Button>
 
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="size-7 ml-auto">
-                                                            <MoreHorizontal className="size-3" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-44">
-                                                        {canPreview(file.mime_type) && (
-                                                            <DropdownMenuItem onClick={() => openPreview(file)}>
-                                                                <Eye className="mr-2 size-4" /> Preview
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="size-7 ml-auto">
+                                                                <MoreHorizontal className="size-3" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-44">
+                                                            {canPreview(file.mime_type) && (
+                                                                <DropdownMenuItem onClick={() => openPreview(file)}>
+                                                                    <Eye className="mr-2 size-4" /> Preview
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            <DropdownMenuItem onClick={() => downloadFile(file)}>
+                                                                <Download className="mr-2 size-4" /> Download
                                                             </DropdownMenuItem>
-                                                        )}
-                                                        <DropdownMenuItem onClick={() => downloadFile(file)}>
-                                                            <Download className="mr-2 size-4" /> Download
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => copyLink(file.share_url)}>
-                                                            <Link2 className="mr-2 size-4" /> Copy Link
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem onClick={() => openSettings(file)}>
-                                                            <SlidersHorizontal className="mr-2 size-4" /> Settings
-                                                        </DropdownMenuItem>
-                                                        {file.is_revoked ? (
-                                                            <DropdownMenuItem onClick={() => unrevokeFile(file)}>
-                                                                <RefreshCw className="mr-2 size-4" /> Restore Link
+                                                            <DropdownMenuItem onClick={() => copyLink(file.share_url)}>
+                                                                <Link2 className="mr-2 size-4" /> Copy Link
                                                             </DropdownMenuItem>
-                                                        ) : (
-                                                            <DropdownMenuItem onClick={() => revokeFile(file)}>
-                                                                <Unlink className="mr-2 size-4" /> Revoke Link
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => openSettings(file)}>
+                                                                <SlidersHorizontal className="mr-2 size-4" /> Settings
                                                             </DropdownMenuItem>
-                                                        )}
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem className="text-destructive" onClick={() => deleteFile(file)}>
-                                                            <Trash2 className="mr-2 size-4" /> Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                            {file.is_revoked ? (
+                                                                <DropdownMenuItem onClick={() => unrevokeFile(file)}>
+                                                                    <RefreshCw className="mr-2 size-4" /> Restore Link
+                                                                </DropdownMenuItem>
+                                                            ) : (
+                                                                <DropdownMenuItem onClick={() => revokeFile(file)}>
+                                                                    <Unlink className="mr-2 size-4" /> Revoke Link
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem className="text-destructive" onClick={() => deleteFile(file)}>
+                                                                <Trash2 className="mr-2 size-4" /> Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -600,97 +578,120 @@ export default function Files() {
                 </div>
             </div>
 
-            <Drawer open={uploadOpen} onOpenChange={setUploadOpen}>
-                <DrawerContent>
-                    <DrawerHeader>
-                        <DrawerTitle>Upload Files</DrawerTitle>
-                        <DrawerDescription>
-                            Drop files or click to select. Max 100MB per file.
+            <Sheet open={uploadOpen} onOpenChange={setUploadOpen}>
+                <SheetContent side="right" className="w-full sm:max-w-lg">
+                    <SheetHeader>
+                        <SheetTitle>Upload Files</SheetTitle>
+                        <SheetDescription>
+                            Max 100MB per file.
                             {activeFolder && <span className="block mt-1 text-xs">Uploading to folder: <strong>{activeFolder}</strong></span>}
-                        </DrawerDescription>
-                    </DrawerHeader>
+                        </SheetDescription>
+                    </SheetHeader>
 
-                    <div className="px-4 space-y-4 overflow-y-auto max-h-[50vh]">
-                        <div
-                            className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center"
-                            onDragOver={(e) => e.preventDefault()}
-                            onDrop={(e) => {
-                                e.preventDefault();
-                                const files = Array.from(e.dataTransfer.files);
-                                if (files.length) setUploadFileList(files);
-                            }}
-                        >
-                            {uploadFileList.length === 0 ? (
-                                <>
-                                    <Upload className="size-8 text-muted-foreground" />
-                                    <div>
-                                        <Button
-                                            variant="link"
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="px-0"
-                                        >
-                                            Click to browse
-                                        </Button>
-                                        <span className="text-sm text-muted-foreground">
-                                            {' '}or drag and drop
-                                        </span>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="w-full space-y-2">
-                                    {uploadFileList.map((f) => (
-                                        <div key={f.name} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-                                            <span className="truncate">{f.name}</span>
-                                            <span className="shrink-0 text-muted-foreground">
-                                                {(f.size / 1024 / 1024).toFixed(1)} MB
+                    <div className="flex-1 overflow-y-auto px-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-dashed p-8 text-center min-h-[200px]"
+                                onDragOver={(e) => e.preventDefault()}
+                                onDrop={(e) => {
+                                    e.preventDefault();
+                                    const files = Array.from(e.dataTransfer.files);
+                                    if (files.length) setUploadFileList(files);
+                                }}
+                            >
+                                {uploadFileList.length === 0 ? (
+                                    <>
+                                        <Upload className="size-8 text-muted-foreground" />
+                                        <div>
+                                            <Button
+                                                variant="link"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="px-0"
+                                            >
+                                                Click to browse
+                                            </Button>
+                                            <span className="text-sm text-muted-foreground">
+                                                {' '}or drag and drop
                                             </span>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                multiple
-                                className="hidden"
-                                onChange={handleFileSelect}
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="upload-caption">Caption</Label>
-                            <Textarea
-                                id="upload-caption"
-                                value={uploadCaption}
-                                onChange={(event) => setUploadCaption(event.target.value)}
-                                placeholder="A caption to save with this upload"
-                                maxLength={1000}
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Added to the Google Sheet for every file in this upload.
-                            </p>
-                        </div>
-
-                        {googleSheets && googleSheets.sheetNames.length > 0 && (
-                            <div className="grid gap-2">
-                                <Label htmlFor="upload-sheet">Post link to sheet</Label>
-                                <Select value={uploadSheetName} onValueChange={setUploadSheetName}>
-                                    <SelectTrigger id="upload-sheet">
-                                        <SelectValue placeholder="Choose a sheet" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {googleSheets.sheetNames.map((name) => (
-                                            <SelectItem key={name} value={name}>{name}</SelectItem>
+                                    </>
+                                ) : (
+                                    <div className="w-full space-y-2">
+                                        {uploadFileList.map((f) => (
+                                            <div key={f.name} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
+                                                <span className="truncate">{f.name}</span>
+                                                <span className="shrink-0 text-muted-foreground">
+                                                    {(f.size / 1024 / 1024).toFixed(1)} MB
+                                                </span>
+                                            </div>
                                         ))}
-                                    </SelectContent>
-                                </Select>
+                                    </div>
+                                )}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleFileSelect}
+                                />
                             </div>
-                        )}
+
+                            <div className="flex flex-col gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="upload-caption">Caption</Label>
+                                    <Textarea
+                                        id="upload-caption"
+                                        value={uploadCaption}
+                                        onChange={(event) => setUploadCaption(event.target.value)}
+                                        placeholder="A caption to save with this upload"
+                                        maxLength={1000}
+                                        className="min-h-[80px]"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Added to the Google Sheet for every file in this upload.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="upload-post-type">Post Type</Label>
+                                        <Select value={uploadPostType} onValueChange={setUploadPostType}>
+                                            <SelectTrigger id="upload-post-type">
+                                                <SelectValue placeholder="None" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {POST_TYPE_OPTIONS.map((opt) => (
+                                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {googleSheets && googleSheets.sheetNames.length > 0 ? (
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="upload-sheet">Sheet</Label>
+                                            <Select value={uploadSheetName} onValueChange={setUploadSheetName}>
+                                                <SelectTrigger id="upload-sheet">
+                                                    <SelectValue placeholder="Choose a sheet" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {googleSheets.sheetNames.map((name) => (
+                                                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    ) : (
+                                        <div />
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <DrawerFooter>
+                    <SheetFooter className="px-6">
                         {uploadFileList.length > 0 ? (
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 w-full">
                                 <Button variant="ghost" className="flex-1" onClick={() => { setUploadFileList([]); setUploadOpen(false); }}>
                                     Cancel
                                 </Button>
@@ -699,11 +700,11 @@ export default function Files() {
                                 </Button>
                             </div>
                         ) : (
-                            <Button variant="ghost" onClick={() => setUploadOpen(false)}>Close</Button>
+                            <Button variant="ghost" className="w-full" onClick={() => setUploadOpen(false)}>Close</Button>
                         )}
-                    </DrawerFooter>
-                </DrawerContent>
-            </Drawer>
+                    </SheetFooter>
+                </SheetContent>
+            </Sheet>
 
             <Drawer open={settingsOpen} onOpenChange={setSettingsOpen}>
                 <DrawerContent>
@@ -807,6 +808,24 @@ export default function Files() {
                             </div>
 
                             <div className="space-y-2">
+                                <Label htmlFor="settings-post-type">Post Type</Label>
+                                <Select
+                                    value={settings.post_type || '_none'}
+                                    onValueChange={(v) => setSettings((prev) => ({ ...prev, post_type: v === '_none' ? '' : v }))}
+                                >
+                                    <SelectTrigger id="settings-post-type">
+                                        <SelectValue placeholder="None" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="_none">None</SelectItem>
+                                        {POST_TYPE_OPTIONS.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
                                 <Label htmlFor="tags">Tags</Label>
                                 <Input
                                     id="tags"
@@ -866,7 +885,118 @@ export default function Files() {
                     </div>
                 </DrawerContent>
             </Drawer>
+
+            <Sheet open={mobileFolderOpen} onOpenChange={setMobileFolderOpen}>
+                <SheetContent side="bottom" className="max-h-[70vh]">
+                    <SheetHeader>
+                        <SheetTitle>Folders</SheetTitle>
+                    </SheetHeader>
+                    <div className="overflow-y-auto px-1 py-4">
+                        <FolderSidebarContent
+                            folders={folders}
+                            allTags={allTags}
+                            activeFolder={activeFolder}
+                            filters={filters}
+                            newFolderName={newFolderName}
+                            setNewFolderName={setNewFolderName}
+                            createFolder={createFolder}
+                            updateQuery={(params) => { updateQuery(params); setMobileFolderOpen(false); }}
+                        />
+                    </div>
+                </SheetContent>
+            </Sheet>
         </>
+    );
+}
+
+function FolderSidebarContent({
+    folders,
+    allTags,
+    activeFolder,
+    filters,
+    newFolderName,
+    setNewFolderName,
+    createFolder,
+    updateQuery,
+}: {
+    folders: string[];
+    allTags: string[];
+    activeFolder?: string;
+    filters: { tag?: string };
+    newFolderName: string;
+    setNewFolderName: (v: string) => void;
+    createFolder: () => void;
+    updateQuery: (params: Record<string, string | undefined>) => void;
+}) {
+    return (
+        <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Folders</span>
+                <span className="text-xs text-muted-foreground">{folders.length}</span>
+            </div>
+
+            <div className="flex gap-1">
+                <Input
+                    placeholder="New folder..."
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') createFolder(); }}
+                    className="h-8 text-xs"
+                />
+                <Button variant="ghost" size="icon" className="size-8 shrink-0" onClick={createFolder}>
+                    <FolderPlus className="size-4" />
+                </Button>
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+                <button
+                    onClick={() => updateQuery({ folder: undefined, search: undefined })}
+                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted ${!activeFolder ? 'bg-muted font-medium' : ''}`}
+                >
+                    <HardDrive className="size-4 text-muted-foreground" />
+                    All Files
+                </button>
+
+                {folders.map((f) => (
+                    <button
+                        key={f}
+                        onClick={() => updateQuery({ folder: f === activeFolder ? undefined : f, search: undefined })}
+                        className={`flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-muted ${activeFolder === f ? 'bg-muted font-medium' : ''}`}
+                    >
+                        <FolderIcon className="size-4 text-muted-foreground" />
+                        <span className="truncate">{f}</span>
+                    </button>
+                ))}
+            </div>
+
+            {activeFolder && (
+                <button
+                    onClick={() => updateQuery({ folder: undefined, search: undefined })}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors text-left px-2"
+                >
+                    &larr; Clear filter
+                </button>
+            )}
+
+            <Separator />
+
+            {allTags.length > 0 && (
+                <div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tags</span>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                        {allTags.map((t) => (
+                            <button
+                                key={t}
+                                onClick={() => updateQuery({ tag: filters.tag === t ? undefined : t, search: undefined })}
+                                className={`rounded-md px-2 py-0.5 text-xs transition-colors ${filters.tag === t ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-muted/80'}`}
+                            >
+                                {t}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
 

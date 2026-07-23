@@ -25,6 +25,7 @@ Route::prefix('{current_team}')
 
         Route::get('files', [FilesController::class, 'index'])->name('files.index');
         Route::post('files', [FilesController::class, 'store'])->name('files.store');
+        Route::post('files/folder', [FilesController::class, 'storeFolder'])->name('files.folder.store');
         Route::patch('files/{fileId}', [FilesController::class, 'update'])->name('files.update');
         Route::delete('files/{fileId}', [FilesController::class, 'destroy'])->name('files.destroy');
         Route::post('files/batch-delete', [FilesController::class, 'batchDestroy'])->name('files.batch-destroy');

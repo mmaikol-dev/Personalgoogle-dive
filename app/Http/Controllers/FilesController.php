@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\Folder;
 use App\Services\GoogleSheetsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,11 +41,17 @@ class FilesController extends Controller
 
         $files = $query->paginate(20)->through(fn (File $file) => $file->toArray());
 
-        $folders = File::where('team_id', $team->id)
-            ->whereNotNull('folder')
-            ->distinct()
-            ->pluck('folder')
-            ->filter()
+        $folders = Folder::where('team_id', $team->id)
+            ->pluck('name')
+            ->merge(
+                File::where('team_id', $team->id)
+                    ->whereNotNull('folder')
+                    ->distinct()
+                    ->pluck('folder')
+                    ->filter()
+            )
+            ->unique()
+            ->sort()
             ->values();
 
         $allTags = File::where('team_id', $team->id)
@@ -90,6 +97,7 @@ class FilesController extends Controller
             'google_sheet_name' => ['nullable', 'string', 'max:100'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
+            'post_type' => ['nullable', 'string', 'max:50'],
         ]);
 
         $team = $request->user()->currentTeam;
@@ -110,6 +118,7 @@ class FilesController extends Controller
             'path' => $path,
             'folder' => $request->get('folder'),
             'tags' => $request->get('tags'),
+            'post_type' => $request->get('post_type'),
         ]);
 
         try {
@@ -142,6 +151,7 @@ class FilesController extends Controller
             'folder' => ['nullable', 'string', 'max:255'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['string', 'max:50'],
+            'post_type' => ['nullable', 'string', 'max:50'],
         ]);
 
         $data = [];
@@ -170,6 +180,10 @@ class FilesController extends Controller
 
         if ($request->has('tags')) {
             $data['tags'] = $request->get('tags');
+        }
+
+        if ($request->has('post_type')) {
+            $data['post_type'] = $request->get('post_type') ?: null;
         }
 
         $file->update($data);
@@ -231,6 +245,22 @@ class FilesController extends Controller
         return Storage::disk($file->disk)->download($file->path, $file->original_name, [
             'Content-Type' => $file->mime_type,
         ]);
+    }
+
+    public function storeFolder(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $team = $request->user()->currentTeam;
+
+        Folder::firstOrCreate([
+            'team_id' => $team->id,
+            'name' => trim($request->get('name')),
+        ]);
+
+        return redirect()->back();
     }
 
     public function preview(string $current_team, string $fileId)
