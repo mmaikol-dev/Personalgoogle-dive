@@ -1,0 +1,995 @@
+{
+  "name": "Instagram Multi-Format Automation (Reels, Post, Story) - FIXED",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc",
+          "mode": "list",
+          "cachedResultName": "Appscript owners",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2115234008,
+          "mode": "list",
+          "cachedResultName": "CONTENT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc/edit#gid=2115234008"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Determine Media & Post Type1').item.json.row_number }}",
+            "STATUS": "Posted"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "FILE NAME",
+              "displayName": "FILE NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "OUTLINE",
+              "displayName": "OUTLINE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "POST TYPE",
+              "displayName": "POST TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        336,
+        1680
+      ],
+      "id": "f089163b-240d-4ff7-b90f-7159c891495c",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fkRFwgjuMJijz5qU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        144,
+        1680
+      ],
+      "id": "f4bd278c-a141-4385-a497-52ecbc793a20",
+      "name": "Facebook Graph API",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        1680
+      ],
+      "id": "275606ff-b71e-4ce2-9502-07c64e21117e",
+      "name": "Wait1",
+      "webhookId": "93000f33-7d73-45db-a1fb-3089574b98fc"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "video_url",
+                "value": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}"
+              },
+              {
+                "name": "media_type",
+                "value": "STORIES"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1952
+      ],
+      "id": "bd8caa45-6403-412a-aa5b-f3aa9d6e3100",
+      "name": "Create Story Video1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "image_url",
+                "value": "={{ $json.file.share_url }}"
+              },
+              {
+                "name": "media_type",
+                "value": "STORIES"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        128,
+        2224
+      ],
+      "id": "22610f34-0d97-4dae-9fda-aa433b0c79ea",
+      "name": "Create Story Image1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "video_url",
+                "value": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $json.output }}"
+              },
+              {
+                "name": "media_type",
+                "value": "VIDEO"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1680
+      ],
+      "id": "c947b505-4ab5-40cc-aa13-4a7f7464e8d0",
+      "name": "Create Post Video1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "image_url",
+                "value": "={{ $json.file.share_url }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $json.output }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        128,
+        2016
+      ],
+      "id": "0e44b7c2-b484-4abc-9403-3ebdfb115ced",
+      "name": "Create Post Image1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v23.0",
+        "node": "17841419514857320",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "video_url",
+                "value": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}"
+              },
+              {
+                "name": "caption",
+                "value": "={{ $json.output }}"
+              },
+              {
+                "name": "media_type",
+                "value": "REELS"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1424
+      ],
+      "id": "e6178945-575f-41b6-b0d7-3a370ec51361",
+      "name": "Create Reel1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "Ity94ImWhe3AFHh2",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Determine Media & Post Type1').item.json.COMBO }}",
+                    "rightValue": "REELS_VIDEO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "af3e573c-e264-4836-9c9a-f192a6408071"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reel"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Determine Media & Post Type1').item.json.COMBO }}",
+                    "rightValue": "POST_IMAGE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8e11e767-43b9-421d-897a-b9dd27a2495f"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Post Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Determine Media & Post Type1').item.json.COMBO }}",
+                    "rightValue": "POST_VIDEO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b03fce10-3740-4876-8b34-fed07da2ce86"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Post Video"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Determine Media & Post Type1').item.json.COMBO }}",
+                    "rightValue": "STORY_IMAGE",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "66cf0d06-c5bd-45b2-93ed-655378b7df5c"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Story Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Determine Media & Post Type1').item.json.COMBO }}",
+                    "rightValue": "STORY_VIDEO",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ae265a9c-b52f-470c-b71b-d8a99b8802d0"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Story Video"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -768,
+        1632
+      ],
+      "id": "b6f48e2c-839c-42f2-90cf-f86a0292e53d",
+      "name": "Route by Post Type1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        1488
+      ],
+      "id": "31c99e76-2ece-4c5b-bd7a-6f4caefd7c60",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "xUH4IkHOC1OEzj3E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Video Topic:{{ $json.OUTLINE }}",
+        "options": {
+          "systemMessage": "=You are a social media expert who writes engaging and SEO optimized instagram captions.\ncreate a short and catchy caption for the given video topic.\nMake sure the tone sounds natural and appealing to the audience.\nAdd two highly relevant hashtags at the end that fit the topic."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1072,
+        1696
+      ],
+      "id": "32bb6a01-2698-4446-8118-48265dfcf3b2",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const item = $input.item.json;\n\nconst fileUrl = item['FILE NAME'] || '';\nconst cleanUrl = fileUrl.split('?')[0];\nconst ext = (cleanUrl.split('.').pop() || '').toLowerCase();\n\nconst videoExts = ['mp4', 'mov', 'm4v'];\nconst imageExts = ['jpg', 'jpeg', 'png', 'webp'];\n\nlet mediaType = 'UNKNOWN';\nif (videoExts.includes(ext)) mediaType = 'VIDEO';\nelse if (imageExts.includes(ext)) mediaType = 'IMAGE';\n\n// Read desired post type from a 'POST TYPE' column.\n// Accepts plain values (REELS / POST / STORY / STORIES) AND messier\n// combos like \"STORY VIDEO\" or \"Reel - video\" by matching keywords\n// instead of requiring an exact match.\nconst raw = (item['POST TYPE'] || '').toString().trim().toUpperCase();\n\nlet postType = 'REELS'; // default if the cell is blank or unrecognized\nif (raw.includes('REEL')) postType = 'REELS';\nelse if (raw.includes('STORY') || raw.includes('STORIES')) postType = 'STORY';\nelse if (raw.includes('POST')) postType = 'POST';\n\n// Reels must be video - fall back to a normal feed POST if someone tags an image as REELS\nif (postType === 'REELS' && mediaType !== 'VIDEO') {\n  postType = 'POST';\n}\n\nconst combo = postType + '_' + mediaType;\n\nreturn {\n  json: {\n    ...item,\n    MEDIA_TYPE: mediaType,\n    POST_TYPE: postType,\n    COMBO: combo\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1328,
+        1696
+      ],
+      "id": "9925d93e-e0de-4928-8ae4-b98e508c320e",
+      "name": "Determine Media & Post Type1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc",
+          "mode": "list",
+          "cachedResultName": "Appscript owners",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2115234008,
+          "mode": "list",
+          "cachedResultName": "CONTENT",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bS2_5f1_Cs95HDcJg0g1xv9SIhHZC-f0EeS_2OQZRxc/edit#gid=2115234008"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "STATUS"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1488,
+        1696
+      ],
+      "id": "a7d4f5eb-4f5c-42f6-8ebf-90949a9fd453",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fkRFwgjuMJijz5qU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1680,
+        1696
+      ],
+      "id": "7a487975-96ed-4724-a289-e0d9ac54bc90",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 1080,
+        "height": 1920,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        2224
+      ],
+      "id": "bb31ad95-50b6-45ac-a0e9-1e8e75b90444",
+      "name": "Resize Image (Story Image)"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        2224
+      ],
+      "id": "bac2b3b8-8e68-4eae-b0da-215fa722e37b",
+      "name": "Download Image (Story Image)"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -608,
+        2016
+      ],
+      "id": "44ffa485-c9df-42f0-a626-afe1efdbfd5c",
+      "name": "Download Image (Post Image)"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 1080,
+        "height": 1080,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        2016
+      ],
+      "id": "5a4604be-6d77-46d8-8ed3-a32f7d7b79f9",
+      "name": "Resize Image (Post Image)"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.APP_URL }}/api/upload-automation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $binary.data }}",
+              "type": "file"
+            },
+            {
+              "name": "post_type",
+              "value": "POST_IMAGE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        2016
+      ],
+      "id": "upload-auto-post-001",
+      "name": "Upload to App (Post Image)"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.APP_URL }}/api/upload-automation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.API_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file",
+              "value": "={{ $binary.data }}",
+              "type": "file"
+            },
+            {
+              "name": "post_type",
+              "value": "STORY_IMAGE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        2224
+      ],
+      "id": "upload-auto-story-001",
+      "name": "Upload to App (Story Image)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Facebook Graph API": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Facebook Graph API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Story Video1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Story Image1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Post Video1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Post Image1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Reel1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Post Type1": {
+      "main": [
+        [
+          {
+            "node": "Create Reel1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image (Post Image)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Post Video1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download Image (Story Image)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Story Video1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Route by Post Type1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Determine Media & Post Type1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Determine Media & Post Type1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resize Image (Story Image)": {
+      "main": [
+        [
+          {
+            "node": "Upload to App (Story Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image (Story Image)": {
+      "main": [
+        [
+          {
+            "node": "Resize Image (Story Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image (Post Image)": {
+      "main": [
+        [
+          {
+            "node": "Resize Image (Post Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resize Image (Post Image)": {
+      "main": [
+        [
+          {
+            "node": "Upload to App (Post Image)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to App (Post Image)": {
+      "main": [
+        [
+          {
+            "node": "Create Post Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload to App (Story Image)": {
+      "main": [
+        [
+          {
+            "node": "Create Story Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "67aee659-54ed-48d4-a28e-3e45a39440b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d48e24b00b7c29ebbc7477a32d18dd834f23fc07fc357612ec22a393ed391fef"
+  },
+  "nodeGroups": [],
+  "id": "sO0kGoAS0GmuLgTw",
+  "tags": []
+}

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\GoogleSheetsController;
+use App\Http\Controllers\Settings\InstagramController;
 use App\Http\Controllers\Settings\SecurityController;
 use App\Http\Controllers\Teams\TeamController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -33,6 +34,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/google-sheets', [GoogleSheetsController::class, 'edit'])->name('google-sheets.edit');
     Route::patch('settings/google-sheets', [GoogleSheetsController::class, 'update'])->name('google-sheets.update');
     Route::get('settings/google-sheets/preview', [GoogleSheetsController::class, 'preview'])->name('google-sheets.preview');
+
+    Route::get('settings/instagram', [InstagramController::class, 'edit'])->name('instagram.edit');
+    Route::patch('settings/instagram', [InstagramController::class, 'update'])->name('instagram.update');
 
     Route::get('settings/teams', [TeamController::class, 'index'])->name('teams.index');
     Route::post('settings/teams', [TeamController::class, 'store'])->name('teams.store');

@@ -37,6 +37,11 @@ const sidebarNavItems: NavItem[] = [
         href: '/settings/google-sheets',
         icon: null,
     },
+    {
+        title: 'Instagram',
+        href: '/settings/instagram',
+        icon: null,
+    },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
