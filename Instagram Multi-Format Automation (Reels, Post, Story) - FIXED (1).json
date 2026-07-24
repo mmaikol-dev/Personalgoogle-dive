@@ -660,26 +660,24 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.APP_URL }}/api/upload-automation",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://drive.sitebase.co.ke/upload-automation",
+        "method": "POST",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.API_TOKEN }}"
+              "value": "Bearer 9d3d03fa5109dff7a29724ff44d1f4ea8533c8ebea55066afb7da5a618b6c4b5"
             }
           ]
         },
         "sendBody": true,
-        "bodyContentType": "multipart-form-data",
+        "bodyContentType": "json",
         "bodyParameters": {
           "parameters": [
             {
-              "name": "file",
-              "value": "={{ $binary.data }}",
-              "type": "file"
+              "name": "file_url",
+              "value": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}"
             },
             {
               "name": "post_type",
@@ -700,26 +698,24 @@
     },
     {
       "parameters": {
-        "url": "={{ $env.APP_URL }}/api/upload-automation",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "https://drive.sitebase.co.ke/upload-automation",
+        "method": "POST",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.API_TOKEN }}"
+              "value": "Bearer 9d3d03fa5109dff7a29724ff44d1f4ea8533c8ebea55066afb7da5a618b6c4b5"
             }
           ]
         },
         "sendBody": true,
-        "bodyContentType": "multipart-form-data",
+        "bodyContentType": "json",
         "bodyParameters": {
           "parameters": [
             {
-              "name": "file",
-              "value": "={{ $binary.data }}",
-              "type": "file"
+              "name": "file_url",
+              "value": "={{ $('Determine Media & Post Type1').item.json['FILE NAME'] }}"
             },
             {
               "name": "post_type",
